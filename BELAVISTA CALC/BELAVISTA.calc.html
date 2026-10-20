@@ -1,0 +1,1037 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173d2b">
+  <title>Bela Vista | Controle de Pesagem</title>
+  <style>
+/* Variáveis CSS */
+:root {
+  --green: #173d2b;
+  --green2: #24583d;
+  --gold: #c6a35b;
+  --bg: #f4f5f1;
+  --ink: #1e2922;
+  --muted: #6c776f;
+  --line: #e1e6df;
+  --white: #fff;
+  --error: #dc3545;
+  --success: #28a745;
+  --warning: #ffc107;
+}
+
+/* Reset e base */
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); font-family: Inter, system-ui, -apple-system, 'Segoe UI', Arial, sans-serif; color: var(--ink); }
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+.app { min-height: 100vh; }
+
+/* Header */
+.top { background: var(--green); color: white; padding: 20px max(18px, calc((100vw - 1200px) / 2)); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.logo { width: 180px; height: auto; background: white; padding: 10px; border-radius: 8px; }
+.brand h1 { font-size: 22px; margin: 0; letter-spacing: .08em; }
+.brand p { margin: 3px 0 0; color: #cbd8ce; font-size: 12px; }
+.top small { color: #d6e1d8; }
+
+/* Container principal */
+.wrap { max-width: 1200px; margin: auto; padding: 24px 18px 60px; }
+
+/* Navegação */
+.nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+.nav button { border: 1px solid var(--line); background: white; padding: 10px 16px; border-radius: 10px; color: var(--muted); font-weight: 650; }
+.nav button.active { background: var(--green); color: white; border-color: var(--green); }
+
+/* Títulos */
+.heading { display: flex; justify-content: space-between; align-items: end; gap: 14px; margin-bottom: 18px; }
+.heading h2 { margin: 0; font-size: 25px; }
+.heading p { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+
+/* Botões */
+.btn { border: 0; border-radius: 10px; background: var(--green); color: white; padding: 11px 15px; font-weight: 700; }
+.btn.gold { background: var(--gold); color: #17251b; }
+.btn.light { background: white; border: 1px solid var(--line); color: var(--ink); }
+
+/* Grid de estatísticas */
+.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+.stat, .panel { background: white; border: 1px solid var(--line); border-radius: 15px; padding: 17px; }
+.stat span { color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.stat strong { display: block; font-size: 24px; margin-top: 9px; }
+.panel { margin-bottom: 16px; }
+.panel h3 { font-size: 16px; margin: 0 0 16px; }
+
+/* Campos de formulário */
+.fields { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 13px; font-weight: 600; color: var(--ink); }
+.field input, .field select { padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; }
+.field input:focus, .field select:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(23, 61, 43, 0.1); }
+.field input.error { border-color: var(--error); }
+.field small { font-size: 11px; color: var(--error); display: none; }
+.field small.visible { display: block; }
+
+/* Calculadora de pesos */
+.calculator-input { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.calculator-input input { flex: 1; min-width: 200px; padding: 12px 16px; border: 1px solid var(--line); border-radius: 10px; font-size: 16px; }
+.calculator-input input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(23, 61, 43, 0.1); }
+.calculator-input button { padding: 12px 20px; font-size: 14px; white-space: nowrap; }
+
+.weights-list { max-height: 400px; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.weight-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); background: white; }
+.weight-item:last-child { border-bottom: none; }
+.weight-item:hover { background: #f8f9f7; }
+.weight-info { display: flex; align-items: center; gap: 12px; }
+.weight-number { background: var(--green); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+.weight-value { font-size: 15px; font-weight: 600; color: var(--ink); }
+.weight-price { font-size: 13px; color: var(--green); font-weight: 600; }
+.weight-remove { background: none; border: none; color: var(--error); font-size: 20px; cursor: pointer; padding: 4px 8px; opacity: 0.6; }
+.weight-remove:hover { opacity: 1; }
+
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead { background: var(--bg); }
+th { text-align: left; padding: 10px 12px; font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .02em; }
+td { padding: 8px 12px; border-top: 1px solid var(--line); }
+td.num { text-align: right; font-weight: 600; color: var(--green); }
+
+/* Resumo */
+.summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+.summary > div { background: var(--bg); padding: 14px; border-radius: 10px; }
+.summary span { display: block; font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .02em; }
+.summary strong { display: block; font-size: 20px; margin-top: 6px; color: var(--green); }
+
+/* Ações */
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.search { width: 100%; }
+.empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+.hint { font-size: 12px; color: var(--muted); margin: 0; }
+.foot { text-align: center; padding: 24px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); margin-top: 40px; }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: white; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; display: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
+/* Utilitários */
+.hidden { display: none !important; }
+.no-print { display: block; }
+
+/* Modal */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
+.modal { background: white; border-radius: 16px; max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); }
+.modal-header { padding: 20px 24px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+.modal-header h2 { margin: 0; font-size: 20px; color: var(--green); }
+.modal-close { background: none; border: none; font-size: 28px; color: var(--muted); cursor: pointer; padding: 0; line-height: 1; }
+.modal-close:hover { color: var(--ink); }
+.modal-body { padding: 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--line); display: flex; gap: 10px; justify-content: flex-end; }
+
+/* Distribuição de pesos */
+.distribution { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
+.dist-item { background: var(--bg); padding: 12px; border-radius: 8px; text-align: center; }
+.dist-item .range { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+.dist-item .count { font-size: 24px; font-weight: 700; color: var(--green); }
+.dist-item .percent { font-size: 12px; color: var(--muted); }
+
+/* Relatório detalhado */
+.report-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.report-summary > div { background: var(--bg); padding: 14px; border-radius: 10px; text-align: center; }
+.report-summary label { display: block; font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .02em; margin-bottom: 6px; }
+.report-summary .value { font-size: 22px; font-weight: 700; color: var(--green); }
+.report-header { background: var(--green); color: white; padding: 16px; border-radius: 10px; margin-bottom: 20px; }
+.report-header h3 { margin: 0 0 8px; font-size: 18px; }
+.report-header p { margin: 0; font-size: 13px; opacity: 0.9; }
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .grid, .summary, .report-summary { grid-template-columns: repeat(2, 1fr); }
+  .fields { grid-template-columns: 1fr; }
+  .heading { flex-direction: column; align-items: flex-start; }
+  .top { flex-direction: column; text-align: center; }
+  .brand { flex-direction: column; }
+}
+@media (max-width: 480px) {
+  .grid, .summary, .report-summary { grid-template-columns: 1fr; }
+}
+
+/* Impressão */
+@media print {
+  .top, .nav, .no-print, .actions, .foot, .modal-overlay { display: none !important; }
+  body { background: white; }
+  .wrap { padding: 0; max-width: none; }
+  .panel, .stat { break-inside: avoid; border: 1px solid #ccc; }
+  .hidden { display: none !important; }
+}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div class="brand">
+        <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/2wBDAQMDAwQDBAgEBAgQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/wAARCAMnBAADASIAAhEBAxEB/8QAHgABAAEEAwEBAAAAAAAAAAAAAAECBwgJAwUGBAr/xABqEAABAwMCBAIFBQYOCg0KBgMBAAIDBAURBgcIEiExQVETImFxgQkUMpGhFSNCUrHRFxhVVmJygpKTlLKzwdIWGSQzOEN1dpWiJTQ2N1NUV2NlZnS0wicoNURGZHOj4fAmRYOEpPFHheL/xAAaAQEAAgMBAAAAAAAAAAAAAAAAAQIDBAUG/8QANREBAAIBAwMDBAAFAwQCAwAAAAECAwQRIQUSMRNBURQiMmEVI0JScSQzgTSRocFisUNT0f/aAAwDAQACEQMRAD8A2pHsqVWowEA+HvR3ZSiCk9gqXLkRBA7KURBA7lB3KlEEDspREBU83sVSICIiAiIgIiIPZSiICIiAiIgIiICIiAiIgIiICIiAiIgKkEcxVSoAPN2QVoiICIiAiIgIiICIiAiIgj8IqURAREQEREEHsg7KUQEREBERAUfhFSiAiIghvZSiICpf2VSIIHZSiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiCG9lKIgIiICgdypRBAUoiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAig9EyCglERAREQEREBERAREQEREBERAREQEREEZUqAOqlAREQEREBERAREQERQThBKKMpkIJRRlMhEbpRRkJkeabpSijITmHtTyjeISijmCBwPZRulKIikEREBERAREQEREBERAREQEREBFBICd0EoiICIiAiIgIiIIypUAdSpQEREBERAREQEREBERARFB7IJUZCBUu6FBWigdlKAiIgIiIIHj71Kjt3TIKCURQeyCUUBSgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAig9EyCglERAREQEREBERAREQERQeiCUUc3RQXgKJnYVIuP0zeblwV8txvVqtFO6rutwp6OBgy6WeVsbR7yeiib1r5lNYm3h9qpe9rernAe8qzuqeLHZLTEj4ZdWR10zDgx0LDMfrHT7VaXVPygWn6fmj0hoytq3joJKyQRMP1ZK083UNNi4vZs49FnyfjVl4HDwz0Uc7ebB7+9a9bzx17tXBzvubbrRbWnOC2MyEfF3deLuvFXvzdWu59ez07H/g0sEbB8Dy5+1aVut6eOKxMtqOkajbeZiGz30kfX1x079eypNRAO8rR7zhal6/d/dS6k/P8AcXUTwR1aLlKxv1NcAPgundqPVda7Mt+vE/vrJnf+Ja89cn+iks0dIttzeG381dKO9RH++CCqpz2nafitPLq7UBP+3bh/Cv8AzoLzqCBwMd3ukTh25al4OfrUx1y3vQt0f/5w3ECaM9Q8Kr0jPPPuC1E2/cvce0OAt2vdRU/lyXOYdfdzY+xertPE7vtaQBTbh3CRjSMtqWxzfWXNJP1qY69Tfa9ZUno94j7bQ2lue3tjuk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…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r3VPK0fggLlUYHkpiPkh8FbabbcxyV9BT1LfxZomvH1ELiodOWK2u57dZqGld5w07GH7AF2mAmAsfo4/Oy3ffbbdxiMdMAdOoVYAAVSLJtxspt7iIilIiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIgIiICIiAiIggnCA5UogIiICIiAiIgIiIIz1wpUY65UoCKCcJzBBKKAcoSAglFHME5gglFHtTmCCVGQoJBCgd0FajOVKgDCCUUE4QHKCUREBFBICd0EoipyM5QVIiICKD0UcwCCpFTzgqeYIJRRzBOYIJRRzBO6CUREBFHME5gglERARFBOEEoo5gnMEEoo5gnMEEoo5gndBKIiAijmCZCCUUE4TmCCUUcwTmCCUUA5QkBBKKAcqUBFGQpQEUdlHOCgqREQEREEZUqCOoQnCCUUA5UoCIiAiKOYIJRRkKUBEUE4QSigHKlARQXAd0BB7IJRFGQglFHME9qCUUcwQ9EEoo5gnMEEooBypQRlSoA6lSgKMqVBHUIJRRkKUBEUcwQSiIgKM4UqlyCcgqVSDhTzBBKKAcqUBERARFHMEEoig9EEooyCpQEUE4QHKCUUE4TmCCUUcwTmCCUUcwTmCCUREBERAREQFGB5KVBPXCCVGApRBGB5JgeSlEBRgeSlEEYHkmB5KUQEREEEZQDClEBERBGApREBU8pVSjxwglERAUEAoeijm9iCQ0BMDyQHKlBGB5IR5KUQQB5qURAREQRgeSYHkpRAREQEREEYHkmB5IOqlBGB5JgeSlEEYHkpREBERBGB5JgeSlEBRgeSlEEYHkmB5KUQFGApRAREQRgeSlEQFHKFKICIiAiIgKEJwpQEREBERAUYHkpRBGB5KURAREQQpREEEA90Ax2UogKkgqpEEYHkpREEYHkpUZ64Q9EDA8kwPJAc+ClBClEQEREBERBGB5KURAUYHkpRAREQEREEYHkmB5KVB6IJREQEREBRgeSlEBQeoUogpAIKqREBQpRBCYHkgOVKCMDyTA8lKIIwPJMDyUogIiICIiAiIgKCOuVKICIiAipJKkdQglERAREQEREBERAREQEREBERAREQQOilEQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERARFB7IJREQEREBERAREQERRjKApUYAUoCIiAiIgIiICIiAiIgIiIIAwpREBERAREQEREBERAREQFB7IiCUREBERAREQFB7IiB4hB2REEoiICIiAiIgIiICIiAiIgIiICIiAiIggdypREBERAREQFGMoiCUREBERAUHsiIA7IOyIglERAREQEREBQeyIglERAUHsiIJREQEREBERAREQEREBERAREQEREBERBDlKIgIiICg9wiIJREQEREBERAREQEREEfhKURBSSc91I7IiCUREBERAREQFB7IiAOylEQEREBERAREQEREBQ5EQU5Pmqh2REEoiICIiD//Z" alt="Bela Vista Agronegócios" class="logo">
+        <div>
+          <h1>BELA VISTA AGRONEGÓCIOS</h1>
+          <p>Controle de pesagem de animais</p>
+        </div>
+      </div>
+      <small>GESTÃO RURAL • PESAGEM</small>
+    </header>
+
+    <main class="wrap">
+      <nav class="nav no-print">
+        <button class="active" data-tab="dashboard">Visão geral</button>
+        <button data-tab="new">Nova pesagem</button>
+        <button data-tab="history">Histórico</button>
+      </nav>
+
+      <!-- Dashboard -->
+      <section id="dashboard">
+        <div class="heading">
+          <div>
+            <h2>Visão geral</h2>
+            <p>Resumo das pesagens registradas neste dispositivo.</p>
+          </div>
+          <button class="btn" onclick="showTab('new')">＋ Nova pesagem</button>
+        </div>
+
+        <div class="grid">
+          <div class="stat">
+            <span>Pesagens salvas</span>
+            <strong id="statRecords">0</strong>
+          </div>
+          <div class="stat">
+            <span>Animais pesados</span>
+            <strong id="statHeads">0</strong>
+          </div>
+          <div class="stat">
+            <span>Peso acumulado</span>
+            <strong id="statKg">0 kg</strong>
+          </div>
+          <div class="stat">
+            <span>Valor acumulado</span>
+            <strong id="statMoney">R$ 0,00</strong>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Pesagens recentes</h3>
+          <div id="recent"></div>
+        </div>
+
+        <p class="hint">Os dados são guardados neste navegador. Use "Exportar backup" no Histórico para manter uma cópia ou transferir registros.</p>
+      </section>
+
+      <!-- Nova Pesagem -->
+      <section id="new" class="hidden">
+        <div class="heading">
+          <div>
+            <h2>Nova pesagem</h2>
+            <p>Informe os dados e lance o peso de cada animal.</p>
+          </div>
+          <button class="btn light no-print" onclick="clearForm()">Limpar formulário</button>
+        </div>
+
+        <div class="panel">
+          <h3>Dados da pesagem</h3>
+          <div class="fields">
+            <div class="field">
+              <label for="client">Cliente *</label>
+              <input id="client" placeholder="Nome do cliente" required>
+              <small></small>
+            </div>
+            <div class="field">
+              <label for="date">Data *</label>
+              <input id="date" type="date" required>
+              <small></small>
+            </div>
+            <div class="field">
+              <label for="cattle">Categoria do gado</label>
+              <select id="cattle">
+                <option>Novilhas</option>
+                <option>Bezerros</option>
+                <option>Bezerras</option>
+                <option>Garrotes</option>
+                <option>Bois</option>
+                <option>Vacas</option>
+                <option>Novilhos</option>
+                <option>Outros</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="price">Preço por kg (R$) *</label>
+              <input id="price" type="number" min="0" step="0.01" value="0" inputmode="decimal" required>
+              <small></small>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Adicionar pesos (calculadora)</h3>
+          <p class="hint">Digite o peso e clique em Adicionar. Não há limite de quantidade.</p>
+          <div class="calculator-input">
+            <input type="number" id="weightInput" placeholder="Digite o peso (kg)" min="0" step="0.1" inputmode="decimal" onkeypress="if(event.key==='Enter')addWeight()">
+            <button class="btn" onclick="addWeight()">＋ Adicionar</button>
+            <button class="btn" onclick="showPreviewReport()">📋 Finalizar</button>
+            <button class="btn gold" onclick="window.print()">🖨️ Imprimir</button>
+          </div>
+          <div class="weights-list" id="weightsList">
+            <div class="empty">Nenhum peso adicionado ainda.</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Resumo automático</h3>
+          <div class="summary">
+            <div>
+              <span>Total de cabeças</span>
+              <strong id="sumHeads">0</strong>
+            </div>
+            <div>
+              <span>Peso total</span>
+              <strong id="sumKg">0 kg</strong>
+            </div>
+            <div>
+              <span>Média por cabeça</span>
+              <strong id="sumAvg">0 kg</strong>
+            </div>
+            <div>
+              <span>Valor total</span>
+              <strong id="sumMoney">R$ 0,00</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Histórico -->
+      <section id="history" class="hidden">
+        <div class="heading">
+          <div>
+            <h2>Histórico de pesagens</h2>
+            <p>Consulte, imprima, exporte ou exclua registros.</p>
+          </div>
+          <button class="btn" onclick="showTab('new')">＋ Nova pesagem</button>
+        </div>
+
+        <div class="panel">
+          <div class="fields no-print" style="margin-bottom: 14px">
+            <div class="field" style="grid-column: span 2">
+              <label>Buscar cliente ou categoria</label>
+              <input class="search" id="search" placeholder="Digite para filtrar..." oninput="renderHistory()">
+            </div>
+            <div class="field">
+              <label>Data inicial</label>
+              <input type="date" id="from" onchange="renderHistory()">
+            </div>
+            <div class="field">
+              <label>Data final</label>
+              <input type="date" id="to" onchange="renderHistory()">
+            </div>
+          </div>
+          <div id="historyList"></div>
+          <div class="actions no-print">
+            <button class="btn light" onclick="exportCSV()">📊 Exportar CSV</button>
+            <button class="btn light" onclick="exportBackup()">💾 Exportar backup JSON</button>
+            <label class="btn light" for="importFile">📥 Importar backup</label>
+            <input id="importFile" type="file" accept="application/json" class="hidden" onchange="importBackup(event)">
+          </div>
+        </div>
+      </section>
+
+      <div class="foot">Bela Vista Agronegócios · Sistema de pesagem · Versão 2.0</div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+// ============================================================================
+// SISTEMA DE CONTROLE DE PESAGEM - BELA VISTA AGRONEGÓCIOS
+// ============================================================================
+
+// ============================================================================
+// CONSTANTES E CONFIGURAÇÕES
+// ============================================================================
+const STORAGE_KEY = 'bv_pesagens_v1';
+let weightsList = [];
+
+// ============================================================================
+// ESTADO DA APLICAÇÃO
+// ============================================================================
+let records = [];
+
+// ============================================================================
+// UTILITÁRIOS
+// ============================================================================
+const $ = id => document.getElementById(id);
+
+const money = n => Number(n || 0).toLocaleString('pt-BR', {
+  style: 'currency',
+  currency: 'BRL'
+});
+
+const fmt = n => Number(n || 0).toLocaleString('pt-BR', {
+  maximumFractionDigits: 2
+});
+
+const dateNow = () => new Date().toLocaleDateString('en-CA');
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;'
+}[c]));
+
+// ============================================================================
+// TOAST NOTIFICATIONS
+// ============================================================================
+function toast(message, type = 'info') {
+  const toastEl = $('toast');
+  toastEl.textContent = message;
+  toastEl.style.display = 'block';
+  toastEl.style.background = type === 'error' ? 'var(--error)' :
+                            type === 'success' ? 'var(--success)' :
+                            'var(--ink)';
+  setTimeout(() => {
+    toastEl.style.display = 'none';
+  }, 2600);
+}
+
+// ============================================================================
+// NAVEGAÇÃO ENTRE ABAS
+// ============================================================================
+function showTab(tab) {
+  document.querySelectorAll('[data-tab]').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+
+  ['dashboard', 'new', 'history'].forEach(x => {
+    $(x).classList.toggle('hidden', x !== tab);
+  });
+
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'history') renderHistory();
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============================================================================
+// PERSISTÊNCIA DE DADOS
+// ============================================================================
+function loadRecords() {
+  try {
+    records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  } catch (e) {
+    console.error('Erro ao carregar registros:', e);
+    records = [];
+  }
+}
+
+function persist() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  renderDashboard();
+}
+
+// ============================================================================
+// CALCULADORA DE PESOS
+// ============================================================================
+function addWeight() {
+  const input = $('weightInput');
+  const value = parseFloat(input.value);
+
+  if (!Number.isFinite(value) || value <= 0) {
+    toast('Digite um peso válido maior que 0', 'error');
+    input.focus();
+    return;
+  }
+
+  if (value > 2000) {
+    toast('Peso não pode ser maior que 2000 kg', 'error');
+    input.focus();
+    return;
+  }
+
+  weightsList.push({
+    n: weightsList.length + 1,
+    kg: value
+  });
+
+  input.value = '';
+  input.focus();
+  renderWeightsList();
+  calc();
+}
+
+function removeWeight(index) {
+  weightsList.splice(index, 1);
+  weightsList = weightsList.map((w, i) => ({ ...w, n: i + 1 }));
+  renderWeightsList();
+  calc();
+}
+
+function renderWeightsList() {
+  const container = $('weightsList');
+  const price = parseFloat($('price').value) || 0;
+
+  if (weightsList.length === 0) {
+    container.innerHTML = '<div class="empty">Nenhum peso adicionado ainda.</div>';
+    return;
+  }
+
+  const html = weightsList.map((w, index) => `
+    <div class="weight-item">
+      <div class="weight-info">
+        <div class="weight-number">${w.n}</div>
+        <div>
+          <div class="weight-value">${fmt(w.kg)} kg</div>
+          <div class="weight-price">${money(w.kg * price)}</div>
+        </div>
+      </div>
+      <button class="weight-remove" onclick="removeWeight(${index})" title="Remover">×</button>
+    </div>
+  `).join('');
+
+  container.innerHTML = html;
+}
+
+function weights() {
+  return weightsList;
+}
+
+function calc() {
+  const a = weights();
+  const kg = a.reduce((s, x) => s + x.kg, 0);
+  const price = parseFloat($('price').value) || 0;
+
+  $('sumHeads').textContent = a.length;
+  $('sumKg').textContent = fmt(kg) + ' kg';
+  $('sumAvg').textContent = fmt(a.length ? kg / a.length : 0) + ' kg';
+  $('sumMoney').textContent = money(kg * price);
+}
+
+// ============================================================================
+// VALIDAÇÕES
+// ============================================================================
+function validateForm() {
+  const client = $('client').value.trim();
+  const date = $('date').value;
+  const price = parseFloat($('price').value) || 0;
+  const weightsList = weights();
+
+  const errors = [];
+
+  if (!client) {
+    errors.push({ field: 'client', message: 'Informe o nome do cliente' });
+  } else if (client.length < 3) {
+    errors.push({ field: 'client', message: 'Nome do cliente deve ter pelo menos 3 caracteres' });
+  }
+
+  if (!date) {
+    errors.push({ field: 'date', message: 'Informe a data da pesagem' });
+  }
+
+  if (price < 0) {
+    errors.push({ field: 'price', message: 'Preço não pode ser negativo' });
+  }
+
+  if (weightsList.length === 0) {
+    errors.push({ field: 'weightInput', message: 'Adicione pelo menos um peso válido' });
+  }
+
+  return errors;
+}
+
+function showValidationErrors(errors) {
+  document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+  document.querySelectorAll('small.visible').forEach(el => el.classList.remove('visible'));
+
+  errors.forEach(err => {
+    if (err.field === 'weightInput') {
+      toast(err.message, 'error');
+      const input = $(err.field);
+      if (input) {
+        input.classList.add('error');
+        setTimeout(() => input.classList.remove('error'), 2000);
+      }
+    } else {
+      const input = $(err.field);
+      if (input) {
+        input.classList.add('error');
+        const small = input.parentElement.querySelector('small');
+        if (small) {
+          small.textContent = err.message;
+          small.classList.add('visible');
+        }
+      }
+    }
+  });
+}
+
+// ============================================================================
+// LIMPEZA DO FORMULÁRIO
+// ============================================================================
+function clearForm() {
+  if (!confirm('Limpar os dados do formulário?')) return;
+
+  $('client').value = '';
+  $('date').value = dateNow();
+  $('cattle').value = 'Novilhas';
+  $('price').value = '0';
+  $('weightInput').value = '';
+
+  weightsList = [];
+  renderWeightsList();
+
+  document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+  document.querySelectorAll('small.visible').forEach(el => el.classList.remove('visible'));
+
+  calc();
+}
+
+// ============================================================================
+// RELATÓRIO PRÉVIO
+// ============================================================================
+function showPreviewReport() {
+  const errors = validateForm();
+  if (errors.length > 0) {
+    showValidationErrors(errors);
+    return;
+  }
+
+  const client = $('client').value.trim();
+  const date = $('date').value;
+  const cattle = $('cattle').value;
+  const price = parseFloat($('price').value) || 0;
+  const weightsList = weights();
+
+  const kg = weightsList.reduce((s, x) => s + x.kg, 0);
+  const heads = weightsList.length;
+  const avgKg = kg / heads;
+  const total = kg * price;
+
+  const distribution = calculateWeightDistribution(weightsList);
+
+  const reportHTML = generateReportHTML({
+    client,
+    date,
+    cattle,
+    price,
+    heads,
+    totalKg: kg,
+    avgKg,
+    total,
+    weights: weightsList,
+    distribution
+  });
+
+  const modal = createModal('Relatório Prévio - Revisão antes de Salvar', reportHTML, [
+    { text: 'Voltar e Editar', class: 'light', onClick: 'closeModal()' },
+    { text: 'Confirmar e Salvar', class: '', onClick: 'confirmSave()' }
+  ]);
+
+  document.body.appendChild(modal);
+}
+
+function calculateWeightDistribution(weightsList) {
+  const ranges = [
+    { min: 0, max: 200, label: '0-200 kg' },
+    { min: 200, max: 300, label: '200-300 kg' },
+    { min: 300, max: 400, label: '300-400 kg' },
+    { min: 400, max: 500, label: '400-500 kg' },
+    { min: 500, max: 600, label: '500-600 kg' },
+    { min: 600, max: Infinity, label: '600+ kg' }
+  ];
+
+  return ranges.map(range => {
+    const count = weightsList.filter(w => w.kg >= range.min && w.kg < range.max).length;
+    const percent = weightsList.length ? ((count / weightsList.length) * 100).toFixed(1) : 0;
+    return { ...range, count, percent };
+  });
+}
+
+function generateReportHTML(data) {
+  const distHTML = data.distribution.map(d => `
+    <div class="dist-item">
+      <div class="range">${d.label}</div>
+      <div class="count">${d.count}</div>
+      <div class="percent">${d.percent}%</div>
+    </div>
+  `).join('');
+
+  const weightsHTML = data.weights.map(w => `
+    <tr>
+      <td>${w.n}</td>
+      <td>${fmt(w.kg)} kg</td>
+      <td>${money(w.kg * data.price)}</td>
+    </tr>
+  `).join('');
+
+  return `
+    <div class="report-header">
+      <h3>BELA VISTA AGRONEGÓCIOS</h3>
+      <p>Relatório de pesagem - Revisão antes de salvar</p>
+    </div>
+
+    <div class="report-summary">
+      <div>
+        <label>Cliente</label>
+        <div class="value" style="font-size: 16px">${esc(data.client)}</div>
+      </div>
+      <div>
+        <label>Data</label>
+        <div class="value" style="font-size: 16px">${esc(data.date)}</div>
+      </div>
+      <div>
+        <label>Categoria</label>
+        <div class="value" style="font-size: 16px">${esc(data.cattle)}</div>
+      </div>
+      <div>
+        <label>Preço/kg</label>
+        <div class="value" style="font-size: 16px">${money(data.price)}</div>
+      </div>
+    </div>
+
+    <div class="report-summary">
+      <div>
+        <label>Cabeças</label>
+        <div class="value">${data.heads}</div>
+      </div>
+      <div>
+        <label>Peso Total</label>
+        <div class="value">${fmt(data.totalKg)} kg</div>
+      </div>
+      <div>
+        <label>Peso Médio</label>
+        <div class="value">${fmt(data.avgKg)} kg</div>
+      </div>
+      <div>
+        <label>Valor Total</label>
+        <div class="value">${money(data.total)}</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Distribuição de Pesos</h3>
+      <div class="distribution">
+        ${distHTML}
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Detalhamento por Animal</h3>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 64px">Nº</th>
+              <th>Peso</th>
+              <th>Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${weightsHTML}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function createModal(title, content, buttons) {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.id = 'reportModal';
+
+  const buttonsHTML = buttons.map(btn => `
+    <button class="btn ${btn.class || ''}" onclick="${btn.onClick}">${btn.text}</button>
+  `).join('');
+
+  modal.innerHTML = `
+    <div class="modal">
+      <div class="modal-header">
+        <h2>${title}</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        ${content}
+      </div>
+      <div class="modal-footer">
+        ${buttonsHTML}
+      </div>
+    </div>
+  `;
+
+  return modal;
+}
+
+function closeModal() {
+  const modal = $('reportModal');
+  if (modal) {
+    modal.remove();
+  }
+}
+
+function confirmSave() {
+  closeModal();
+  saveRecord();
+}
+
+// ============================================================================
+// SALVAR REGISTRO
+// ============================================================================
+function saveRecord() {
+  const errors = validateForm();
+  if (errors.length > 0) {
+    showValidationErrors(errors);
+    return;
+  }
+
+  const client = $('client').value.trim();
+  const weightsList = weights();
+  const kg = weightsList.reduce((s, x) => s + x.kg, 0);
+  const price = parseFloat($('price').value) || 0;
+
+  const rec = {
+    id: Date.now().toString(),
+    client,
+    date: $('date').value || dateNow(),
+    cattle: $('cattle').value,
+    price,
+    weights: weightsList,
+    heads: weightsList.length,
+    totalKg: kg,
+    avgKg: kg / weightsList.length,
+    total: kg * price,
+    createdAt: new Date().toISOString()
+  };
+
+  records.unshift(rec);
+  persist();
+  toast('Pesagem salva com sucesso!', 'success');
+  clearForm();
+  showTab('history');
+}
+
+// ============================================================================
+// DASHBOARD
+// ============================================================================
+function renderDashboard() {
+  $('statRecords').textContent = records.length;
+  $('statHeads').textContent = records.reduce((s, r) => s + r.heads, 0);
+  $('statKg').textContent = fmt(records.reduce((s, r) => s + r.totalKg, 0)) + ' kg';
+  $('statMoney').textContent = money(records.reduce((s, r) => s + r.total, 0));
+
+  $('recent').innerHTML = records.length
+    ? tableHTML(records.slice(0, 6), false)
+    : '<div class="empty">Nenhuma pesagem registrada ainda.<br>Comece em "Nova pesagem".</div>';
+}
+
+// ============================================================================
+// TABELAS
+// ============================================================================
+function tableHTML(list, actions = true) {
+  return `
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Cliente</th>
+            <th>Categoria</th>
+            <th>Cabeças</th>
+            <th>Peso total</th>
+            <th>Média</th>
+            <th>Valor total</th>
+            ${actions ? '<th class="no-print">Ações</th>' : ''}
+          </tr>
+        </thead>
+        <tbody>
+          ${list.map(r => `
+            <tr>
+              <td>${esc(r.date)}</td>
+              <td>${esc(r.client)}</td>
+              <td>${esc(r.cattle)}</td>
+              <td>${r.heads}</td>
+              <td>${fmt(r.totalKg)} kg</td>
+              <td>${fmt(r.avgKg)} kg</td>
+              <td>${money(r.total)}</td>
+              ${actions ? `
+                <td class="no-print">
+                  <button class="btn light" style="padding:6px 9px" onclick="viewRecord('${r.id}')">Ver</button>
+                  <button class="btn light" style="padding:6px 9px" onclick="deleteRecord('${r.id}')">Excluir</button>
+                </td>
+              ` : ''}
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ============================================================================
+// HISTÓRICO
+// ============================================================================
+function renderHistory() {
+  const q = ($('search').value || '').toLowerCase();
+  const from = $('from').value;
+  const to = $('to').value;
+
+  const list = records.filter(r =>
+    (r.client + ' ' + r.cattle).toLowerCase().includes(q) &&
+    (!from || r.date >= from) &&
+    (!to || r.date <= to)
+  );
+
+  $('historyList').innerHTML = list.length
+    ? tableHTML(list)
+    : '<div class="empty">Nenhum registro encontrado.</div>';
+}
+
+// ============================================================================
+// EXCLUIR REGISTRO
+// ============================================================================
+function deleteRecord(id) {
+  if (!confirm('Excluir esta pesagem? Esta ação não pode ser desfeita.')) return;
+
+  records = records.filter(r => r.id !== id);
+  persist();
+  renderHistory();
+  toast('Registro excluído.', 'success');
+}
+
+// ============================================================================
+// VISUALIZAR REGISTRO
+// ============================================================================
+function viewRecord(id) {
+  const r = records.find(x => x.id === id);
+  if (!r) return;
+
+  const w = r.weights.map(x => `
+    <tr>
+      <td>${x.n}</td>
+      <td>${fmt(x.kg)} kg</td>
+      <td>${money(x.kg * r.price)}</td>
+    </tr>
+  `).join('');
+
+  const win = window.open('', '_blank');
+  if (!win) {
+    toast('Permita pop-ups para abrir o relatório.', 'error');
+    return;
+  }
+
+  win.document.write(`
+    <!doctype html>
+    <html lang="pt-BR">
+    <meta charset="utf-8">
+    <title>Relatório de pesagem</title>
+    <style>
+      body { font: 14px Arial; margin: 32px; color: #1e2922 }
+      h1 { color: #173d2b }
+      table { border-collapse: collapse; width: 100%; margin-top: 20px }
+      td, th { border: 1px solid #ddd; padding: 8px; text-align: left }
+      th { background: #eef2ed }
+      .box { display: inline-block; padding: 12px; margin: 8px 8px 8px 0; background: #f3f5f1 }
+      button { padding: 10px }
+    </style>
+    <h1>BELA VISTA AGRONEGÓCIOS</h1>
+    <h2>Relatório de pesagem</h2>
+    <p><b>Cliente:</b> ${esc(r.client)} &nbsp; <b>Data:</b> ${esc(r.date)} &nbsp; <b>Categoria:</b> ${esc(r.cattle)}</p>
+    <p><b>Preço por kg:</b> ${money(r.price)}</p>
+    <div class="box">Cabeças: <b>${r.heads}</b></div>
+    <div class="box">Peso total: <b>${fmt(r.totalKg)} kg</b></div>
+    <div class="box">Média: <b>${fmt(r.avgKg)} kg</b></div>
+    <div class="box">Total: <b>${money(r.total)}</b></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Animal</th>
+          <th>Peso</th>
+          <th>Valor</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${w}
+      </tbody>
+    </table>
+    <p><button onclick="window.print()">Imprimir / salvar PDF</button></p>
+  `);
+  win.document.close();
+}
+
+// ============================================================================
+// EXPORTAÇÃO/IMPORTAÇÃO
+// ============================================================================
+function exportCSV() {
+  const rows = [
+    ['Data', 'Cliente', 'Categoria', 'Cabeças', 'Peso total kg', 'Média kg', 'Preço por kg', 'Valor total'],
+    ...records.map(r => [r.date, r.client, r.cattle, r.heads, r.totalKg, r.avgKg, r.price, r.total])
+  ];
+
+  const csv = '\ufeff' + rows.map(r =>
+    r.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(';')
+  ).join('\r\n');
+
+  download(csv, 'bela-vista-pesagens.csv', 'text/csv;charset=utf-8;');
+}
+
+function exportBackup() {
+  download(JSON.stringify(records, null, 2), 'bela-vista-backup.json', 'application/json');
+}
+
+function download(data, name, type) {
+  const a = document.createElement('a');
+  const u = URL.createObjectURL(new Blob([data], { type }));
+  a.href = u;
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(u);
+}
+
+function importBackup(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const data = JSON.parse(rd.result);
+      if (!Array.isArray(data)) throw 0;
+
+      const ids = new Set(records.map(r => r.id));
+      records = [...records, ...data.filter(r => !ids.has(r.id))];
+
+      persist();
+      renderHistory();
+      toast('Backup importado com sucesso!', 'success');
+    } catch (err) {
+      toast('Arquivo de backup inválido.', 'error');
+    }
+    e.target.value = '';
+  };
+  rd.readAsText(f);
+}
+
+// ============================================================================
+// INICIALIZAÇÃO
+// ============================================================================
+function init() {
+  loadRecords();
+  $('date').value = dateNow();
+  $('price').addEventListener('input', () => {
+    calc();
+    renderWeightsList();
+  });
+  renderDashboard();
+
+  document.querySelectorAll('[data-tab]').forEach(b => {
+    b.addEventListener('click', () => showTab(b.dataset.tab));
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

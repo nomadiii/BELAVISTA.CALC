@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173d2b">
+  <title>Bela Vista | Controle de Pesagem</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div class="brand">
+        <img src="logo.png" alt="Bela Vista Agronegócios" class="logo">
+        <div>
+          <h1>BELA VISTA AGRONEGÓCIOS</h1>
+          <p>Controle de pesagem de animais</p>
+        </div>
+      </div>
+      <small>GESTÃO RURAL • PESAGEM</small>
+    </header>
+
+    <main class="wrap">
+      <nav class="nav no-print">
+        <button class="active" data-tab="dashboard">Visão geral</button>
+        <button data-tab="new">Nova pesagem</button>
+        <button data-tab="history">Histórico</button>
+      </nav>
+
+      <!-- Dashboard -->
+      <section id="dashboard">
+        <div class="heading">
+          <div>
+            <h2>Visão geral</h2>
+            <p>Resumo das pesagens registradas neste dispositivo.</p>
+          </div>
+          <button class="btn" onclick="showTab('new')">＋ Nova pesagem</button>
+        </div>
+
+        <div class="grid">
+          <div class="stat">
+            <span>Pesagens salvas</span>
+            <strong id="statRecords">0</strong>
+          </div>
+          <div class="stat">
+            <span>Animais pesados</span>
+            <strong id="statHeads">0</strong>
+          </div>
+          <div class="stat">
+            <span>Peso acumulado</span>
+            <strong id="statKg">0 kg</strong>
+          </div>
+          <div class="stat">
+            <span>Valor acumulado</span>
+            <strong id="statMoney">R$ 0,00</strong>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Pesagens recentes</h3>
+          <div id="recent"></div>
+        </div>
+
+        <p class="hint">Os dados são guardados neste navegador. Use "Exportar backup" no Histórico para manter uma cópia ou transferir registros.</p>
+      </section>
+
+      <!-- Nova Pesagem -->
+      <section id="new" class="hidden">
+        <div class="heading">
+          <div>
+            <h2>Nova pesagem</h2>
+            <p>Informe os dados e lance o peso de cada animal.</p>
+          </div>
+          <button class="btn light no-print" onclick="clearForm()">Limpar formulário</button>
+        </div>
+
+        <div class="panel">
+          <h3>Dados da pesagem</h3>
+          <div class="fields">
+            <div class="field">
+              <label for="client">Cliente *</label>
+              <input id="client" placeholder="Nome do cliente" required>
+              <small></small>
+            </div>
+            <div class="field">
+              <label for="date">Data *</label>
+              <input id="date" type="date" required>
+              <small></small>
+            </div>
+            <div class="field">
+              <label for="cattle">Categoria do gado</label>
+              <select id="cattle">
+                <option>Novilhas</option>
+                <option>Bezerros</option>
+                <option>Bezerras</option>
+                <option>Garrotes</option>
+                <option>Bois</option>
+                <option>Vacas</option>
+                <option>Novilhos</option>
+                <option>Outros</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="price">Preço por kg (R$) *</label>
+              <input id="price" type="number" min="0" step="0.01" value="0" inputmode="decimal" required>
+              <small></small>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Adicionar pesos (calculadora)</h3>
+          <p class="hint">Digite o peso e clique em Adicionar. Não há limite de quantidade.</p>
+          <div class="calculator-input">
+            <input type="number" id="weightInput" placeholder="Digite o peso (kg)" min="0" step="0.1" inputmode="decimal" onkeypress="if(event.key==='Enter')addWeight()">
+            <button class="btn" onclick="addWeight()">＋ Adicionar</button>
+            <button class="btn" onclick="showPreviewReport()">📋 Finalizar</button>
+            <button class="btn gold" onclick="window.print()">🖨️ Imprimir</button>
+          </div>
+          <div class="weights-list" id="weightsList">
+            <div class="empty">Nenhum peso adicionado ainda.</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Resumo automático</h3>
+          <div class="summary">
+            <div>
+              <span>Total de cabeças</span>
+              <strong id="sumHeads">0</strong>
+            </div>
+            <div>
+              <span>Peso total</span>
+              <strong id="sumKg">0 kg</strong>
+            </div>
+            <div>
+              <span>Média por cabeça</span>
+              <strong id="sumAvg">0 kg</strong>
+            </div>
+            <div>
+              <span>Valor total</span>
+              <strong id="sumMoney">R$ 0,00</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Histórico -->
+      <section id="history" class="hidden">
+        <div class="heading">
+          <div>
+            <h2>Histórico de pesagens</h2>
+            <p>Consulte, imprima, exporte ou exclua registros.</p>
+          </div>
+          <button class="btn" onclick="showTab('new')">＋ Nova pesagem</button>
+        </div>
+
+        <div class="panel">
+          <div class="fields no-print" style="margin-bottom: 14px">
+            <div class="field" style="grid-column: span 2">
+              <label>Buscar cliente ou categoria</label>
+              <input class="search" id="search" placeholder="Digite para filtrar..." oninput="renderHistory()">
+            </div>
+            <div class="field">
+              <label>Data inicial</label>
+              <input type="date" id="from" onchange="renderHistory()">
+            </div>
+            <div class="field">
+              <label>Data final</label>
+              <input type="date" id="to" onchange="renderHistory()">
+            </div>
+          </div>
+          <div id="historyList"></div>
+          <div class="actions no-print">
+            <button class="btn light" onclick="exportCSV()">📊 Exportar CSV</button>
+            <button class="btn light" onclick="exportBackup()">💾 Exportar backup JSON</button>
+            <label class="btn light" for="importFile">📥 Importar backup</label>
+            <input id="importFile" type="file" accept="application/json" class="hidden" onchange="importBackup(event)">
+          </div>
+        </div>
+      </section>
+
+      <div class="foot">Bela Vista Agronegócios · Sistema de pesagem · Versão 2.0</div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
